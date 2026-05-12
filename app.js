@@ -1,6 +1,13 @@
 // ===== Utilities =====
 const qs = (selector) => document.querySelector(selector);
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+})[char]);
 
 function formatTime(seconds) {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -1080,7 +1087,7 @@ class GameCooldownMode {
     const names = Object.keys(presets).sort((a, b) => a.localeCompare(b, 'ko'));
     const current = this.elements.presetSelect.value;
     this.elements.presetSelect.innerHTML = names.length
-      ? names.map((name) => `<option value="${name}">${name}</option>`).join('')
+      ? names.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')
       : '<option value="">저장된 프리셋 없음</option>';
     if (names.includes(current)) this.elements.presetSelect.value = current;
   }
@@ -1277,10 +1284,11 @@ class GameCooldownMode {
       const progress = slot.lastReadSeconds > 0
         ? clamp((slot.remainingSeconds / slot.lastReadSeconds) * 100, 0, 100)
         : 0;
+      const slotName = escapeHtml(slot.name);
       item.className = `skill-slot-item${slot.alarmed ? ' ready' : ''}`;
       item.innerHTML = `
         <div class="skill-slot-topline">
-          <strong>${slot.name}</strong>
+          <strong>${slotName}</strong>
           <span class="skill-slot-time ${slot.alarmed ? 'ready' : isCooling ? 'cooling' : ''}">
             ${slot.alarmed ? '준비됨' : isCooling ? formatTime(slot.remainingSeconds) : '대기'}
           </span>
@@ -1313,7 +1321,7 @@ class GameCooldownMode {
       box.style.top = `${videoRect.top - surfaceRect.top + slot.rect.y * scaleY}px`;
       box.style.width = `${slot.rect.width * scaleX}px`;
       box.style.height = `${slot.rect.height * scaleY}px`;
-      box.innerHTML = `<span class="game-slot-label">${slot.name}</span>`;
+      box.innerHTML = `<span class="game-slot-label">${escapeHtml(slot.name)}</span>`;
       this.elements.slotLayer.appendChild(box);
     });
   }
@@ -1528,7 +1536,7 @@ class GameCooldownMode {
   }
 
   acceptRead(slot, seconds, displayText) {
-    slot.lastReadText = displayText || String(seconds);
+    slot.lastReadText = escapeHtml(displayText || String(seconds));
     slot.ignoredReadText = '';
     slot.remainingSeconds = seconds;
     slot.lastReadSeconds = seconds;
@@ -1556,10 +1564,10 @@ class GameCooldownMode {
         if (this.confirmRead(slot, seconds)) {
           this.acceptRead(slot, seconds, displayText);
         } else {
-          slot.ignoredReadText = `${displayText || seconds} 확인중`;
+          slot.ignoredReadText = escapeHtml(`${displayText || seconds} 확인중`);
         }
       } else if (displayText) {
-        slot.ignoredReadText = displayText;
+        slot.ignoredReadText = escapeHtml(displayText);
         slot.candidateSeconds = null;
         slot.candidateCount = 0;
       } else if (slot.remainingSeconds <= 0) {
