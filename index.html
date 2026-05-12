@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="멀티 타이머 웹앱 - 여러 타이머를 동시에 실행하고 반복 알람을 받으세요">
+  <title>⏱ Multi Timer Alarm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=13">
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <main class="container">
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-icon">⏱</span>
+        <h1>Multi Timer</h1>
+      </div>
+      <p class="subtitle">여러 타이머를 동시에 실행하고 반복 알람을 받으세요</p>
+    </header>
+
+    <div class="timers-grid" id="timersGrid"></div>
+
+    <button class="add-timer-btn" id="addTimerBtn">
+      <span class="add-icon">＋</span>
+      <span>타이머 추가</span>
+    </button>
+
+    <button class="capture-mode-btn" id="captureModeBtn">
+      <span class="capture-icon">▣</span>
+      <span>캡쳐 모드</span>
+    </button>
+
+    <button class="game-mode-btn" id="gameModeBtn">
+      <span class="game-icon">◇</span>
+      <span>게임 쿨타임 모드</span>
+    </button>
+
+    <footer class="footer">
+      <p>Made with ❤️ · Multi Timer Alarm Web App</p>
+    </footer>
+  </main>
+
+  <div class="capture-overlay hidden" id="captureOverlay" aria-hidden="true">
+    <div class="capture-stage" id="captureStage">
+      <video class="capture-video" id="captureVideo" autoplay muted playsinline></video>
+      <div class="capture-selection hidden" id="captureSelection"></div>
+    </div>
+
+    <div class="capture-toolbar" id="captureToolbar">
+      <div>
+        <strong>캡쳐 모드</strong>
+        <span>드래그해서 저장할 영역을 선택하세요</span>
+      </div>
+      <button class="capture-close-btn" id="captureCloseBtn" type="button">닫기</button>
+    </div>
+  </div>
+
+  <div class="capture-result hidden" id="captureResult" aria-live="polite">
+    <div class="capture-result-panel">
+      <div class="capture-result-header">
+        <strong>캡쳐 완료</strong>
+        <button class="capture-result-close" id="captureResultClose" type="button">✕</button>
+      </div>
+      <img id="capturePreview" alt="선택한 화면 영역 캡쳐 미리보기">
+      <div class="capture-result-actions">
+        <button class="capture-action-btn" id="captureDownloadBtn" type="button">이미지 저장</button>
+        <button class="capture-action-btn secondary" id="captureCopyBtn" type="button">클립보드 복사</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-overlay hidden" id="gameOverlay" aria-hidden="true">
+    <div class="game-panel">
+      <div class="game-panel-header">
+        <div>
+          <strong>게임 쿨타임 모드</strong>
+          <span>메이플스토리 화면을 선택하고 스킬칸을 등록하세요</span>
+        </div>
+        <button class="game-close-btn" id="gameCloseBtn" type="button">닫기</button>
+      </div>
+
+      <div class="game-workspace">
+        <div class="game-stage" id="gameStage">
+          <div class="game-zoom-surface" id="gameZoomSurface">
+            <video class="game-video" id="gameVideo" autoplay muted playsinline></video>
+            <div class="game-slot-layer" id="gameSlotLayer"></div>
+            <div class="game-selection hidden" id="gameSelection"></div>
+          </div>
+          <div class="game-stage-hint" id="gameStageHint">확대 후 숫자 부분만 드래그하세요</div>
+        </div>
+
+        <aside class="game-sidebar">
+          <div class="game-field">
+            <label for="skillNameInput">스킬 이름</label>
+            <input id="skillNameInput" type="text" value="스킬" maxlength="20">
+          </div>
+
+          <div class="game-field-row">
+            <div class="game-field">
+              <label for="skillCooldownInput">스킬 최대 초</label>
+              <input id="skillCooldownInput" type="number" value="60" min="1" max="6000">
+            </div>
+            <div class="game-field">
+              <label for="cooldownSensitivityInput">OCR 간격(ms)</label>
+              <input id="cooldownSensitivityInput" type="number" value="900" min="500" max="3000">
+            </div>
+          </div>
+
+          <div class="game-field">
+            <label for="gameZoomInput">지정 확대</label>
+            <select id="gameZoomInput" class="game-select">
+              <option value="1">1x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2" selected>2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
+          </div>
+
+          <div class="game-preset-box">
+            <div class="game-field">
+              <label for="presetNameInput">프리셋 이름</label>
+              <input id="presetNameInput" type="text" value="기본" maxlength="24">
+            </div>
+            <div class="game-field">
+              <label for="presetSelect">저장된 프리셋</label>
+              <select id="presetSelect" class="game-select"></select>
+            </div>
+            <div class="game-preset-actions">
+              <button class="game-action" id="savePresetBtn" type="button">프리셋 저장</button>
+              <button class="game-action" id="loadPresetBtn" type="button">불러오기</button>
+              <button class="game-action danger" id="deletePresetBtn" type="button">삭제</button>
+            </div>
+          </div>
+
+          <button class="game-action primary" id="addSkillSlotBtn" type="button">스킬칸 등록</button>
+          <button class="game-action" id="analyzeToggleBtn" type="button">분석 시작</button>
+          <button class="game-action" id="recordToggleBtn" type="button">녹화 시작</button>
+          <button class="game-action hidden" id="downloadRecordingBtn" type="button">녹화 저장</button>
+          <button class="game-action danger" id="clearSavedSlotsBtn" type="button">저장된 스킬 지우기</button>
+
+          <div class="game-status" id="gameStatus">화면 선택 후 스킬칸을 드래그하세요.</div>
+          <div class="skill-slot-list" id="skillSlotList"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js?v=15"></script>
+</body>
+</html>
