@@ -1368,7 +1368,11 @@ class GameCooldownMode {
     if (typeof Tesseract === 'undefined') return false;
     this.setStatus('OCR 엔진을 준비하는 중입니다. 처음 한 번만 조금 걸릴 수 있습니다.');
     this.ocrWorker = await Tesseract.createWorker('eng');
-    await this.ocrWorker.setParameters({ tessedit_char_whitelist: '0123456789' });
+    await this.ocrWorker.setParameters({
+      tessedit_char_whitelist: '0123456789:：mMsS분초 ',
+      tessedit_pageseg_mode: '7',
+      preserve_interword_spaces: '1',
+    });
     this.ocrReady = true;
     return true;
   }
@@ -1479,22 +1483,7 @@ class GameCooldownMode {
   }
 
   parseCooldownText(rawText, maxSeconds) {
-    const compact = (rawText || '').replace(/\s/g, '');
-    const timeMatch = compact.match(/(\d{1,2})\D+(\d{1,2})/);
-    if (timeMatch) {
-      const minutes = parseInt(timeMatch[1], 10);
-      const seconds = parseInt(timeMatch[2], 10);
-      const total = minutes * 60 + seconds;
-      if (seconds < 60 && total <= maxSeconds) return total;
-    }
-
-    const digitGroups = compact.match(/\d{1,3}/g);
-    if (!digitGroups) return null;
-    const parsed = digitGroups
-      .map((group) => parseInt(group, 10))
-      .filter((value) => Number.isFinite(value) && value > 0 && value <= maxSeconds);
-    if (parsed.length === 0) return null;
-    return parsed.sort((a, b) => String(b).length - String(a).length || b - a)[0];
+    return window.CooldownParser.parseCooldownText(rawText, maxSeconds);
   }
 
   expectedRemaining(slot, now = Date.now()) {
