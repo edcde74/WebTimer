@@ -1,5 +1,9 @@
 const assert = require('node:assert/strict');
-const { parseCooldownText, shouldConfirmInitialRead } = require('./cooldown-parser');
+const {
+  parseCooldownText,
+  shouldConfirmInitialRead,
+  readExceedsMaximumCooldown,
+} = require('./cooldown-parser');
 
 const cases = [
   ['reads Korean minute and second units', '1분 23초', 180, 83],
@@ -20,6 +24,12 @@ for (const [name, rawText, maxSeconds, expected] of cases) {
 
 assert.equal(shouldConfirmInitialRead(4, 90), false, 'requires confirmation for tiny first reads');
 assert.equal(shouldConfirmInitialRead(5, 90), false, 'requires confirmation for five-second first reads');
-assert.equal(shouldConfirmInitialRead(30, 90), true, 'accepts normal first reads immediately');
+assert.equal(shouldConfirmInitialRead(45, 90), false, 'requires confirmation for mid-range first reads');
+assert.equal(shouldConfirmInitialRead(63, 90), true, 'accepts first reads near the maximum cooldown immediately');
+assert.equal(shouldConfirmInitialRead(30, 90), false, 'requires confirmation for low first reads');
+assert.equal(readExceedsMaximumCooldown('1:45', 90), true, 'detects colon OCR reads above max cooldown');
+assert.equal(readExceedsMaximumCooldown('1 45', 90), true, 'detects separated OCR reads above max cooldown');
+assert.equal(readExceedsMaximumCooldown('1:12', 90), false, 'allows colon OCR reads within max cooldown');
+assert.equal(readExceedsMaximumCooldown('45', 90), false, 'does not reject second-only reads');
 
 console.log('cooldown parser tests passed');

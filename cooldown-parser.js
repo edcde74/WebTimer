@@ -72,17 +72,31 @@
     return parsed[0].value;
   }
 
+  function readExceedsMaximumCooldown(rawText, maxSeconds) {
+    const limit = parseInt(maxSeconds, 10);
+    if (!Number.isFinite(limit) || limit <= 0) return false;
+
+    const normalized = normalizeCooldownText(rawText);
+    const separatedTimeMatch = normalized.match(/(\d{1,2})\D+(\d{1,2})/);
+    if (!separatedTimeMatch) return false;
+
+    const minutes = parseInt(separatedTimeMatch[1], 10);
+    const seconds = parseInt(separatedTimeMatch[2], 10);
+    if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || seconds >= 60) return true;
+    return minutes * 60 + seconds > limit;
+  }
+
   function shouldConfirmInitialRead(seconds, maxSeconds) {
     const parsedSeconds = parseInt(seconds, 10);
     const parsedMaxSeconds = parseInt(maxSeconds, 10);
     if (!Number.isFinite(parsedSeconds) || !Number.isFinite(parsedMaxSeconds)) return false;
-    const smallReadThreshold = Math.max(5, Math.ceil(parsedMaxSeconds * 0.1));
-    return parsedSeconds > smallReadThreshold;
+    return parsedSeconds >= Math.max(1, Math.floor(parsedMaxSeconds * 0.7));
   }
 
   return {
     normalizeCooldownText,
     parseCooldownText,
+    readExceedsMaximumCooldown,
     shouldConfirmInitialRead,
   };
 });

@@ -1546,6 +1546,13 @@ class GameCooldownMode {
       const result = await this.ocrWorker.recognize(this.buildOcrCanvas(slot));
       const rawText = result.data.text || '';
       const displayText = rawText.trim().replace(/\s+/g, ' ');
+      if (window.CooldownParser.readExceedsMaximumCooldown(rawText, slot.maxSeconds)) {
+        slot.ignoredReadText = escapeHtml(`${displayText} 최대초과`);
+        slot.candidateSeconds = null;
+        slot.candidateCount = 0;
+        return;
+      }
+
       const seconds = this.parseCooldownText(rawText, slot.maxSeconds);
 
       if (seconds !== null && this.isPlausibleRead(slot, seconds)) {
