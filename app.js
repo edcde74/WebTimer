@@ -1516,8 +1516,7 @@ class GameCooldownMode {
     }
 
     if (expected <= 0) {
-      const tinyValueNeedsConfirmation = slot.maxSeconds > 10 && seconds <= 2;
-      return !tinyValueNeedsConfirmation || slot.candidateCount >= 2;
+      return window.CooldownParser.shouldConfirmInitialRead(seconds, slot.maxSeconds) || slot.candidateCount >= 2;
     }
 
     if (seconds >= Math.max(1, Math.floor(slot.maxSeconds * 0.7))) return true;

@@ -46,6 +46,7 @@
     if (separatedTimeMatch) {
       const total = toTotalSeconds(separatedTimeMatch[1], separatedTimeMatch[2], limit);
       if (total !== null) return total;
+      return null;
     }
 
     const digitGroups = compact.match(/\d{1,4}/g);
@@ -71,8 +72,17 @@
     return parsed[0].value;
   }
 
+  function shouldConfirmInitialRead(seconds, maxSeconds) {
+    const parsedSeconds = parseInt(seconds, 10);
+    const parsedMaxSeconds = parseInt(maxSeconds, 10);
+    if (!Number.isFinite(parsedSeconds) || !Number.isFinite(parsedMaxSeconds)) return false;
+    const smallReadThreshold = Math.max(5, Math.ceil(parsedMaxSeconds * 0.1));
+    return parsedSeconds > smallReadThreshold;
+  }
+
   return {
     normalizeCooldownText,
     parseCooldownText,
+    shouldConfirmInitialRead,
   };
 });
